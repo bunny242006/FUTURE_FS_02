@@ -11,7 +11,7 @@ app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'public')));
 
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST || "localhost",
+    host: process.env.MYSQLHOST || '127.0.0.1',
     user: process.env.MYSQLUSER || "root",
     password: process.env.MYSQLPASSWORD || "mukesh",
     database: process.env.MYSQLDATABASE || "crm",
