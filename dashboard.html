@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MY DATA Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand-logo">
+      <div class="logo-icon-container" style="font-size: 20px;">🐰</div>
+      <span class="logo-text">MY DATA</span>
+    </div>
+
+    <div class="nav-section-title">MAIN</div>
+    <ul class="nav-items">
+      <li><a class="active" onclick="switchView('dashboardView', this)">✨ Dashboard</a></li>
+      <li><a onclick="switchView('calendarView', this)">📅 Calendar</a></li>
+      <li><a onclick="switchView('leadsView', this)">📋 All Leads</a></li>
+      <li><a onclick="openAddModal()">➕ Add Lead</a></li>
+    </ul>
+
+    <div class="nav-section-title">ADMIN</div>
+    <ul class="nav-items nav-settings">
+      <li><a onclick="switchView('settingsView', this)">⚙️ Settings</a></li>
+    </ul>
+
+    <div class="user-profile" onclick="window.location.href='index.html'">
+      <div class="avatar">AU</div>
+      <div class="user-info">
+        <div class="name">AdminUser</div>
+        <div class="role">Admin (Logout)</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="view-section">
+      <div class="page-header">
+        <div>
+          <h1>Welcome back, <span style="color:var(--primary-light)">Admin</span> 👋</h1>
+          <p>Here is your pipeline snapshot for today.</p>
+        </div>
+        <div class="header-actions">
+          <button class="primary-btn" onclick="openAddModal()">+ Add Lead</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">TOTAL LEADS</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-desc">All time database</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">PIPELINE VALUE</div>
+          <div class="stat-value" id="stat-value">$0</div>
+          <div class="stat-desc">Projected revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">NEW LEADS</div>
+          <div class="stat-value" id="stat-new">0</div>
+          <div class="stat-desc">Needs immediate contact</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">CONVERTED</div>
+          <div class="stat-value" id="stat-converted">0</div>
+          <div class="stat-desc">Success rate</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Lead Acquisition (Last 7 Days)</h3>
+          <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Sources Distribution</h3>
+          <div class="chart-container">
+            <canvas id="donutChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL LEADS VIEW -->
+    <div id="leadsView" class="view-section hidden">
+      <div class="page-header">
+        <div>
+          <h1>All Leads</h1>
+          <p id="totalRecordsText">0 total records found</p>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" style="width:auto; padding: 10px 16px;">⬇ Export CSV</button>
+          <button class="primary-btn" onclick="openAddModal()">+ Add Lead</button>
+        </div>
+      </div>
+
+      <div class="filters-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by name, email, company..." onkeyup="filterTable()">
+        <select id="statusFilter" onchange="filterTable()">
+          <option value="All">All Status</option>
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Qualified">Qualified</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Lost">Lost</option>
+          <option value="Converted">Converted</option>
+        </select>
+        <select id="sourceFilter" onchange="filterTable()">
+          <option value="All">All Sources</option>
+          <option value="Website">Website</option>
+          <option value="Referral">Referral</option>
+          <option value="Social">Social</option>
+          <option value="Cold Call">Cold Call</option>
+        </select>
+        <div class="date-inputs">
+          FROM <input type="date" id="dateFrom"> TO <input type="date" id="dateTo">
+        </div>
+      </div>
+
+      <div class="data-table-container">
+        <table id="customerTable">
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Value</th>
+              <th>Company</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Populated via script.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="calendarView" class="view-section hidden">
+      <div class="page-header" style="align-items: center;">
+        <div>
+          <h1>Calendar & Schedule</h1>
+          <p id="realtimeClock" style="font-weight:600; color:var(--primary-light);">00:00:00</p>
+        </div>
+        <div class="calendar-controls" style="display:flex; gap:10px; align-items:center;">
+          <button class="icon-btn" onclick="prevMonth()">◀</button>
+          <h3 id="currentMonthYear" style="margin:0; min-width:150px; text-align:center;">Month Year</h3>
+          <button class="icon-btn" onclick="nextMonth()">▶</button>
+        </div>
+      </div>
+
+      <div class="calendar-container glass-panel">
+        <div class="calendar-header-row">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div id="settingsView" class="view-section hidden" style="border-top: 4px solid var(--warning);">
+      <div class="page-header">
+        <div>
+          <h1>Administration Settings</h1>
+          <p style="color:var(--warning);">System Configuration & Security Hub</p>
+        </div>
+        <button class="primary-btn" style="background:var(--bg-input); border:1px solid var(--border-light); width:auto;" onclick="switchView('dashboardView', document.querySelector('.nav-items a:first-child'))">🏠 Go Home / Dashboard</button>
+      </div>
+
+      <div class="settings-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        <!-- User Management -->
+        <div class="chart-card">
+          <h3 style="color:var(--warning);">User Management</h3>
+          <p class="stat-desc" style="margin-bottom:15px;">Add accounts and modify access statuses.</p>
+          <div style="display:flex; gap:10px; margin-bottom:15px;">
+             <input type="text" id="newUsername" placeholder="Username" style="flex:1;">
+             <input type="password" id="newPassword" placeholder="Pass" style="flex:1;">
+             <select id="newRole" style="flex:1; padding:10px; border-radius:8px; background:var(--bg-dark); color:white; border:1px solid var(--border-light);"><option>User</option><option>Admin</option></select>
+             <button class="icon-btn" style="background:var(--warning); color:black; font-weight:bold; width:60px;" onclick="addNewUser()">Add</button>
+          </div>
+          <table style="width:100%;">
+             <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+             <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Login History -->
+        <div class="chart-card" style="max-height:400px; overflow-y:auto;">
+          <h3 style="color:var(--warning);">Recent Login History</h3>
+          <p class="stat-desc" style="margin-bottom:15px;">Audit log of attempts into the MY DATA system.</p>
+          <table style="width:100%;">
+             <thead><tr><th>Time</th><th>User</th><th>Status</th></tr></thead>
+             <tbody id="loginHistoryBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Notifications & Config -->
+        <div class="chart-card" style="grid-column: span 2;">
+          <h3 style="color:var(--warning);">Reminder Notifications & Due Date Settings</h3>
+          <p class="stat-desc" style="margin-bottom:15px;">Global configuration for backend notification engines.</p>
+          
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:15px; background:var(--bg-dark); border-radius:8px; margin-bottom:10px;">
+            <div>
+              <strong>Highlight Overdue Leads</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted);">Automatically change leads to yellow if they pass their due date bounds.</p>
+            </div>
+            <label style="cursor:pointer; padding:6px 12px; background:var(--warning); color:black; font-weight:600; border-radius:100px;">Enabled</label>
+          </div>
+          
+           <div style="display:flex; align-items:center; justify-content:space-between; padding:15px; background:var(--bg-dark); border-radius:8px;">
+            <div>
+              <strong>Email Reminders (Cron)</strong>
+              <p style="font-size:0.8rem; color:var(--text-muted);">Send automated system notifications for pending due dates.</p>
+            </div>
+            <label style="cursor:pointer; padding:6px 12px; background:var(--border-light); color:var(--text-muted); font-weight:600; border-radius:100px;">Disabled (Manual via Modal)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- DAILY NOTE MODAL -->
+<div id="noteModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; display:flex; align-items:center; justify-content:center;">
+  <div class="chart-card" style="width: 100%; max-width: 500px; position:relative;">
+    <button onclick="closeNoteModal()" style="position:absolute; right:20px; top:20px; background:transparent; width:auto; border:none; color:white; cursor:pointer;">✕</button>
+    <h2 style="margin-bottom: 20px;">Daily Note</h2>
+    <p id="noteDateDisplay" style="color:var(--text-muted); margin-bottom:15px; font-size:0.85rem; font-weight:600;"></p>
+    <input type="hidden" id="noteTargetDate">
+    <div class="form-group">
+      <textarea id="dailyNoteText" rows="10" style="width:100%; padding:14px; background:var(--bg-input); border:1px solid var(--border-light); color:var(--text-main); border-radius:8px; resize:vertical; font-family:inherit;" placeholder="Start writing your notes..."></textarea>
+    </div>
+    <button class="primary-btn" onclick="saveDailyNote()">Save Note</button>
+  </div>
+</div>
+
+<!-- ADD LEAD MODAL -->
+<div id="addModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; display:flex; align-items:center; justify-content:center;">
+  <div class="chart-card" style="width: 100%; max-width: 500px; position:relative;">
+    <button onclick="closeAddModal()" style="position:absolute; right:20px; top:20px; background:transparent; width:auto; border:none; color:white; cursor:pointer;">✕</button>
+    <h2 style="margin-bottom: 20px;">Add New Lead</h2>
+    <div class="form-group"><label>NAME</label><input id="add-name" placeholder="John Doe"></div>
+    <div class="form-group"><label>EMAIL</label><input id="add-email" placeholder="john@example.com"></div>
+    <div class="form-group"><label>COMPANY</label><input id="add-company" placeholder="Acme Corp"></div>
+    <div style="display:flex; gap:10px;">
+      <div class="form-group" style="flex:1;"><label>PHONE</label><input id="add-phone" placeholder="555-0199"></div>
+      <div class="form-group" style="flex:1;"><label>PIPELINE VALUE ($)</label><input type="number" id="add-value" placeholder="15000"></div>
+      <div class="form-group" style="flex:1;"><label>DUE DATE</label><input type="date" id="add-due-date"></div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <div class="form-group" style="flex:1;">
+        <label>SOURCE</label>
+        <select id="add-source" style="width:100%; padding:14px; background:var(--bg-input); border:1px solid var(--border-light); color:var(--text-main); border-radius:8px;">
+          <option>Website</option><option>Referral</option><option>Social</option><option>Cold Call</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>STATUS</label>
+        <select id="add-status" style="width:100%; padding:14px; background:var(--bg-input); border:1px solid var(--border-light); color:var(--text-main); border-radius:8px;">
+          <option>New</option><option>Contacted</option><option>Qualified</option><option>In Progress</option><option>Converted</option><option>Lost</option>
+        </select>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="submitLead()">Create Lead</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
